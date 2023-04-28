@@ -1,0 +1,12 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+    <h2>Spliced image detection tool</h2>
+    <form method="POST" class="post-form" autocomplete="off">{% csrf_token %}
+        {{ form.as_p }}    <!--render form as paragrah. Will wrap the form in <p> tags-->
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    {% for msg in messages %}
+    <p style = color:red >{{msg}}</p>
+    {% endfor %}
+{% endblock %}
