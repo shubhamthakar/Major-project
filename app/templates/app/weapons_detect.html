@@ -1,8 +1,11 @@
 {% extends 'app/base.html' %}
-
+{% load static %}
 {% block content %}
     <h2>Weapons detection tool</h2>
-    <form method="POST" class="post-form" autocomplete="off">{% csrf_token %}
+    {% if show %}
+    <img src="{% static 'app/final_output.png' %}"></img>
+    {% endif %}
+    <form method="POST" enctype="multipart/form-data" class="post-form" autocomplete="off">{% csrf_token %}
         {{ form.as_p }}    <!--render form as paragrah. Will wrap the form in <p> tags-->
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
