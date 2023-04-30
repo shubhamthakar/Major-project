@@ -1,20 +1,17 @@
 from django.shortcuts import render
 from django.contrib import messages
-from .forms import Ques_ans_form, Image_form
+from .forms import Ques_ans_form, Image_form, Video_form
 import torch
 from transformers import BertForQuestionAnswering
 from transformers import BertTokenizer
 import cv2
-import matplotlib.patches as patches
 import torchvision
 from torchvision import transforms as torchtrans  
 import matplotlib.pyplot as plt
 import time
 # Create your views here.
-import os
 import tensorflow as tf
 from io import BytesIO
-import base64
 from keras.models import load_model
 import numpy as np
 from PIL import Image, ImageChops, ImageEnhance
@@ -175,21 +172,47 @@ def plot_img_bbox(img, target):
         # print((box[0], box[1]), (box[2], box[3]))
         img = cv2.rectangle(img, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), thickness=2, color=(255, 0, 0))
         # rect = patches.Rectangle((x, y),
-        #                          width, height,
-        #                          linewidth = 2,
-        #                          edgecolor = 'r',
-        #                          facecolor = 'none')
+                                #  width, height,
+                                #  linewidth = 2,
+                                #  edgecolor = 'r',
+                                #  facecolor = 'none')
 
         # Draw the bounding box on top of the image
         # a.add_patch(rect)
     # plt.savefig('app/static/app/final_output.png')
-    cv2.imwrite("app/static/app/final_output.png", img)
+    return img
 
-def weapons_detect(request):
-    show = False
-    if request.method == "POST":
-        #send image to model
-        image = Image.open(BytesIO(request.FILES['image'].read()))
+def generate_video(images):
+    height, width, layers = images[0].shape  
+  
+    video = cv2.VideoWriter('app/static/app/output_video.mp4',cv2.VideoWriter_fourcc(*'MP4V'), 30, (width, height))  
+  
+    # Appending the images to the video one by one
+    for image in images: 
+        print("inside")
+        video.write(image) 
+      
+    # Deallocating memories taken for window creation
+    print("done")
+    cv2.destroyAllWindows() 
+    video.release()
+
+
+def handle_uploaded_file(f):
+    with open("video.mp4", 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+    cap = cv2.VideoCapture("/Users/bhavyashah/Major-project/video.mp4")
+    success, img = cap.read()
+    fno = 0
+    arr = []
+    while success:
+        # read next frame
+        # image = Image.open(BytesIO(request.FILES['image'].read()))
+        img  = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        fno+=1
+        image = Image.fromarray(np.uint8(img))
         test_data = gun([image], [0])
         img = test_data[0]
         input = []
@@ -197,10 +220,18 @@ def weapons_detect(request):
         outputs = model3(input)
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         nms_prediction = apply_nms(outputs[0], iou_thresh=0.7)
-        print('NMS APPLIED MODEL OUTPUT')
-        plot_img_bbox(torch_to_pil(img), nms_prediction)
-        # time.sleep(2.5)
+        print('NMS APPLIED MODEL OUTPUT', fno)
+        arr.append(plot_img_bbox(torch_to_pil(img), nms_prediction))
+        success, img = cap.read()
+    print("here")
+    generate_video(arr)
+
+def weapons_detect(request):
+    show = False
+    if request.method == "POST":
+        file = request.FILES['video']
+        handle_uploaded_file(file)
         show = True
     print(show)
-    form = Image_form()
+    form = Video_form()
     return render(request, 'app/weapons_detect.html', {'form':form, 'show': show})

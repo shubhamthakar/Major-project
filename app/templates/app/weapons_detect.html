@@ -3,7 +3,7 @@
 {% block content %}
     <h2>Weapons detection tool</h2>
     {% if show %}
-    <img src="{% static 'app/final_output.png' %}"></img>
+    <a  href="/static/app/output_video.mp4" download> Download Document </a>
     {% endif %}
     <form method="POST" enctype="multipart/form-data" class="post-form" autocomplete="off">{% csrf_token %}
         {{ form.as_p }}    <!--render form as paragrah. Will wrap the form in <p> tags-->

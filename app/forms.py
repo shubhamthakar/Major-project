@@ -6,3 +6,7 @@ class Ques_ans_form(forms.Form):
 
 class Image_form(forms.Form):
     image = forms.ImageField()
+
+
+class Video_form(forms.Form):
+    video = forms.FileField()
